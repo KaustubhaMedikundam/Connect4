@@ -6,6 +6,7 @@ import javafx.application.Application;
 
 import javafx.application.Platform;
 import javafx.scene.Scene;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
@@ -14,8 +15,14 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.util.ArrayList;
+
 public class JavaFXTemplate extends Application {
 	static Server serverConnection;
+	static ArrayList<String> actions = new ArrayList<>();
+	static ListView<String> listItems;
+	ListView<String> listItems2;
+
 
 	public JavaFXTemplate() throws Exception {
 	}
@@ -24,7 +31,8 @@ public class JavaFXTemplate extends Application {
 		// TODO Auto-generated method stub
 		serverConnection = new Server(data -> {
 			Platform.runLater(()->{
-//				listItems.getItems().add(data.toString());
+//				actions.add(data.toString());
+				listItems.getItems().add(data.toString());
 			});
 
 		});
@@ -45,5 +53,7 @@ public class JavaFXTemplate extends Application {
 			primaryStage.setScene(scene);
 			primaryStage.show();
 	}
+
+
 
 }
