@@ -10,10 +10,11 @@ import java.util.function.Consumer;
 public class Server {
     TheServer server;
     int count = 1;
+    //keeps count of number of players
     ArrayList<ClientThread> clients = new ArrayList<ClientThread>();
+    //client thread...have not figure out yet
     private Consumer<Serializable> callback;
     Server(Consumer<Serializable> call){
-
         callback = call;
         server = new TheServer();
         server.start();
@@ -26,13 +27,11 @@ public class Server {
             try(ServerSocket mysocket = new ServerSocket(5555);){
                 System.out.println("Server is waiting for a client!");
 
-
                 while(true) {
                     ClientThread c = new ClientThread(mysocket.accept(), count);
                     callback.accept("client has connected to server: " + "client #" + count);
                     clients.add(c);
                     c.start();
-
                     count++;
 
                 }
@@ -44,8 +43,7 @@ public class Server {
     }
 
     class ClientThread extends Thread{
-
-
+        CFourInfo game = new CFourInfo();
         Socket connection;
         int count;
         ObjectInputStream in;
@@ -56,11 +54,23 @@ public class Server {
             this.count = count;
         }
 
-        public void updateClients(String message) {
+        public void updateClients(CFourInfo message) {
             for(int i = 0; i < clients.size(); i++) {
-                ClientThread t = clients.get(i);
+                ClientThread p1 = clients.get(0);
                 try {
-                    t.out.writeObject(message);
+                    message.whoseTurn = true;
+                    p1.out.writeObject(message);
+                    if(clients.size()>1){
+                        ClientThread p2 = clients.get(1);
+                        if(message.turn){
+                            message.turn=false;
+                        }
+                        else{
+                            message.turn=true;
+                        }
+                        message.whoseTurn = false;
+                        p2.out.writeObject(message);
+                    }
                 }
                 catch(Exception e) {}
             }
@@ -77,31 +87,43 @@ public class Server {
                 System.out.println("Streams not open");
             }
 
-            updateClients("new client on server: client #"+count);
-
-            if(count == 2){
                 while(true) {
-                    try {
-//                    String data = in.readObject().toString();
-//                    callback.accept("client: " + count + " sent: " + data);
-//                    updateClients("client #"+count+" said: "+data);
+                    while(count<1) {
+                        game.hasTwoPlayers = false;
+                        updateClients(game);
+                    }
+                        game.hasTwoPlayers = true;
+                        System.out.println("he");
+                        updateClients(game);
+                        try {
+                            CFourInfo data = (CFourInfo) in.readObject();
+                            callback.accept((Serializable) data);
+                            System.out.println(data.columnMove + " " + data.rowMove);
+                            //callback.accept("client: " + count + " sent: " + data.rowMove + ", " + data.columnMove);
+                            if (game.turn) {
+                                game.turn = false;
+                            } else {
+                                game.turn = true;
+                            }
+                            game.hasTwoPlayers = true;
+                            updateClients(game);
+                        } catch (Exception e) {
+                            callback.accept("OOOOPPs...Something wrong with the socket from client: " + count + "....closing down!");
+                            game.hasTwoPlayers = false;
+                            updateClients(game);
+//                        clients.remove(this);
+                            break;
+                        }
+
 
                     }
-                    catch(Exception e) {
-                        callback.accept("OOOOPPs...Something wrong with the socket from client: " + count + "....closing down!");
-                        updateClients("Client #"+count+" has left the server!");
-                        clients.remove(this);
-                        break;
-                    }
-                }
-            }
-            else{
-                try {
-                    out.writeObject("only has one player;");
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+//            }
+//            else{
+//                System.out.println("not working");
+//                game.hasTwoPlayers=false;
+//                updateClients(game);
+//            }
+
 
         }//end of run
 
