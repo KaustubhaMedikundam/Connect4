@@ -54,26 +54,31 @@ public class Server {
             this.count = count;
         }
 
-        public void updateClients(CFourInfo message) {
-            for(int i = 0; i < clients.size(); i++) {
+        public void updateClients() {
+//            for(int i = 0; i < clients.size(); i++) {
                 ClientThread p1 = clients.get(0);
                 try {
-                    message.whoseTurn = true;
-                    p1.out.writeObject(message);
-                    if(clients.size()>1){
-                        ClientThread p2 = clients.get(1);
-                        if(message.turn){
-                            message.turn=false;
-                        }
-                        else{
-                            message.turn=true;
-                        }
-                        message.whoseTurn = false;
-                        p2.out.writeObject(message);
+                    if(game.whoseTurn){
+                        game.turn=true;
                     }
+                    else {
+                        game.turn=false;
+                    }
+                    p1.out.writeObject(game);
+                    if(clients.size()>1){
+                        p1.game.hasTwoPlayers=true;
+                        ClientThread p2 = clients.get(1);
+                        game.turn = !game.turn;
+//                        game.whoseTurn= !game.whoseTurn;
+//                        game.whoseTurn = false;
+                        p2.out.writeObject(game);
+                        System.out.println("update client says: " + game.turn);
+//                        game.turn = !game.turn;
+                    }
+
                 }
                 catch(Exception e) {}
-            }
+//            }
         }
 
         public void run(){
@@ -88,29 +93,30 @@ public class Server {
             }
 
                 while(true) {
-                    while(count<1) {
+                    if(clients.size()<2) {
                         game.hasTwoPlayers = false;
-                        updateClients(game);
+                        updateClients();
                     }
-                        game.hasTwoPlayers = true;
-                        System.out.println("he");
-                        updateClients(game);
+                       game.hasTwoPlayers = true;
+//                    System.out.println("boo");
+                    if(game.rowMove==10){
+                        updateClients();
+                        System.out.println("10");
+                    }
                         try {
                             CFourInfo data = (CFourInfo) in.readObject();
                             callback.accept((Serializable) data);
                             System.out.println(data.columnMove + " " + data.rowMove);
                             //callback.accept("client: " + count + " sent: " + data.rowMove + ", " + data.columnMove);
-                            if (game.turn) {
-                                game.turn = false;
-                            } else {
-                                game.turn = true;
-                            }
+                            game=data;
+                            game.whoseTurn=!game.whoseTurn;
+//                            System.out.println(game.turn);
                             game.hasTwoPlayers = true;
-                            updateClients(game);
+                            updateClients();
                         } catch (Exception e) {
                             callback.accept("OOOOPPs...Something wrong with the socket from client: " + count + "....closing down!");
                             game.hasTwoPlayers = false;
-                            updateClients(game);
+                            updateClients();
 //                        clients.remove(this);
                             break;
                         }

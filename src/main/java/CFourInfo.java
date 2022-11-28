@@ -17,6 +17,8 @@ public class CFourInfo implements Serializable {
         p2Win = false;
         tie = false;
         turn = true;
-        rowMove=50;
+        whoseTurn = true;
+        rowMove=10;
+
     }
 }
