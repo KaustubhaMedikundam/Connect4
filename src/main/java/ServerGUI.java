@@ -27,8 +27,6 @@ public class ServerGUI extends Application {
 
 		});
 		launch(args);
-
-
 	}
 
 	//feel free to remove the starter code from this method

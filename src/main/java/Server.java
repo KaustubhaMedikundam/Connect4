@@ -55,34 +55,21 @@ public class Server {
         }
 
         public void updateClients() {
-//            for(int i = 0; i < clients.size(); i++) {
-                ClientThread p1 = clients.get(0);
+            for(int i = 0; i <clients.size();i++){
+                System.out.println("server:"+game.hasTwoPlayers);
+                ClientThread p1 = clients.get(i);
                 try {
-                    if(game.whoseTurn){
-                        game.turn=true;
-                    }
-                    else {
-                        game.turn=false;
-                    }
+                    game.numPlayers = clients.size();
+                    p1.out.reset();
                     p1.out.writeObject(game);
-                    if(clients.size()>1){
-                        p1.game.hasTwoPlayers=true;
-                        ClientThread p2 = clients.get(1);
-                        game.turn = !game.turn;
-//                        game.whoseTurn= !game.whoseTurn;
-//                        game.whoseTurn = false;
-                        p2.out.writeObject(game);
-                        System.out.println("update client says: " + game.turn);
-//                        game.turn = !game.turn;
-                    }
-
+//                    game.whoseTurn = !game.whoseTurn;
+                   game.turn = !game.turn;
                 }
                 catch(Exception e) {}
-//            }
+            }
         }
 
         public void run(){
-
             try {
                 in = new ObjectInputStream(connection.getInputStream());
                 out = new ObjectOutputStream(connection.getOutputStream());
@@ -91,7 +78,6 @@ public class Server {
             catch(Exception e) {
                 System.out.println("Streams not open");
             }
-
                 while(true) {
                     if(clients.size()<2) {
                         game.hasTwoPlayers = false;
@@ -105,31 +91,32 @@ public class Server {
                     }
                         try {
                             CFourInfo data = (CFourInfo) in.readObject();
-                            callback.accept((Serializable) data);
+                            int cM = game.columnMove + 1;
+                            int rM = game.rowMove + 1;
+                            String sent = cM+" " + rM;
+                            callback.accept((Serializable) sent);
                             System.out.println(data.columnMove + " " + data.rowMove);
                             //callback.accept("client: " + count + " sent: " + data.rowMove + ", " + data.columnMove);
                             game=data;
                             game.whoseTurn=!game.whoseTurn;
 //                            System.out.println(game.turn);
                             game.hasTwoPlayers = true;
+                            if(game.whoseTurn){
+                                game.turn=true;
+                             }
+                            else {
+                                game.turn=false;
+                            }
                             updateClients();
                         } catch (Exception e) {
-                            callback.accept("OOOOPPs...Something wrong with the socket from client: " + count + "....closing down!");
+                           callback.accept("OOOOPPs...Something wrong with the socket from client: " + count + "....closing down!");
                             game.hasTwoPlayers = false;
+                            game.numPlayers --;
+                            clients.remove(this);
                             updateClients();
-//                        clients.remove(this);
                             break;
                         }
-
-
                     }
-//            }
-//            else{
-//                System.out.println("not working");
-//                game.hasTwoPlayers=false;
-//                updateClients(game);
-//            }
-
 
         }//end of run
 
