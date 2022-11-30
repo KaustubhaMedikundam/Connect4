@@ -8,23 +8,25 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 
 public class Server {
+    int port;
     TheServer server;
     int count = 1;
     //keeps count of number of players
     ArrayList<ClientThread> clients = new ArrayList<ClientThread>();
     //client thread...have not figure out yet
     private Consumer<Serializable> callback;
-    Server(Consumer<Serializable> call){
+    Server(Consumer<Serializable> call, int portNum){
         callback = call;
         server = new TheServer();
         server.start();
+        port = portNum;
     }
 
     public class TheServer extends Thread{
 
         public void run() {
 
-            try(ServerSocket mysocket = new ServerSocket(5555);){
+            try(ServerSocket mysocket = new ServerSocket(port);){
                 System.out.println("Server is waiting for a client!");
 
                 while(true) {
@@ -93,7 +95,7 @@ public class Server {
                             CFourInfo data = (CFourInfo) in.readObject();
                             int cM = game.columnMove + 1;
                             int rM = game.rowMove + 1;
-                            String sent = cM+" " + rM;
+                            String sent = "client: " + count + " sent: "+ cM+ " " + rM;
                             callback.accept((Serializable) sent);
                             System.out.println(data.columnMove + " " + data.rowMove);
                             //callback.accept("client: " + count + " sent: " + data.rowMove + ", " + data.columnMove);
