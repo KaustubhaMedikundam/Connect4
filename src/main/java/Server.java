@@ -58,10 +58,8 @@ public class Server {
 
         public void updateClients() {
             for(int i = 0; i <clients.size();i++){
-                System.out.println("server:"+game.hasTwoPlayers);
                 ClientThread p1 = clients.get(i);
                 try {
-                    game.numPlayers = clients.size();
                     p1.out.reset();
                     p1.out.writeObject(game);
 //                    game.whoseTurn = !game.whoseTurn;
@@ -86,22 +84,18 @@ public class Server {
                         updateClients();
                     }
                        game.hasTwoPlayers = true;
-//                    System.out.println("boo");
                     if(game.rowMove==10){
                         updateClients();
-                        System.out.println("10");
                     }
                         try {
                             CFourInfo data = (CFourInfo) in.readObject();
-                            int cM = game.columnMove + 1;
-                            int rM = game.rowMove + 1;
+                            int cM = data.columnMove + 1;
+                            int rM = data.rowMove + 1;
                             String sent = "client: " + count + " sent: "+ cM+ " " + rM;
                             callback.accept((Serializable) sent);
-                            System.out.println(data.columnMove + " " + data.rowMove);
                             //callback.accept("client: " + count + " sent: " + data.rowMove + ", " + data.columnMove);
                             game=data;
                             game.whoseTurn=!game.whoseTurn;
-//                            System.out.println(game.turn);
                             game.hasTwoPlayers = true;
                             if(game.whoseTurn){
                                 game.turn=true;
